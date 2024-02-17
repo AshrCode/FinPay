@@ -1,4 +1,5 @@
-﻿using Common.ApiException;
+﻿using Application.Payment.Topup;
+using Common.ApiException;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -9,10 +10,12 @@ namespace Service.Controllers.Payment
     [ApiController]
     public class PaymentController : BaseController
     {
-        public PaymentController(ILogger<PaymentController> logger) 
+        private readonly ITopupApp _topupApp;
+
+        public PaymentController(ILogger<PaymentController> logger, ITopupApp topupApp) 
             : base(logger)
         {
-
+            _topupApp = topupApp;
         }
 
         /// <summary>
@@ -27,7 +30,7 @@ namespace Service.Controllers.Payment
         {
             try
             {
-               // await _productApp.SellProduct(request.ProductId, request.Quantity);
+                await _topupApp.MakePayment(request.UserID, request.BeneficiaryId, request.Amount);
 
                 // We can also create a generic response model for all the end-points.
                 return Ok();
