@@ -1,4 +1,5 @@
-﻿using Common.ApiException;
+﻿using Application.Infrastructure;
+using Common.ApiException;
 using Domain.Entities;
 using Domain.Enum;
 using Microsoft.Extensions.Logging;
@@ -13,16 +14,16 @@ namespace Application.Payment.Topup
         private readonly IUserRepository _userRepository;
         private readonly ITransactionRepository _transactionRepository;
         private readonly IBeneficiararyRepository _beneficiararyRepository;
+        private readonly IBalanceService _balanceService;
         private readonly ILogger _logger;
 
-        static float bal = 6000;
-
-        public TopupApp(ILogger<TopupApp> logger, IUserRepository userRepository, ITransactionRepository transactionRepository, IBeneficiararyRepository beneficiararyRepository)
+        public TopupApp(ILogger<TopupApp> logger, IUserRepository userRepository, ITransactionRepository transactionRepository, IBeneficiararyRepository beneficiararyRepository, IBalanceService balanceService)
         {
             _logger = logger;
             _userRepository = userRepository;
             _transactionRepository = transactionRepository;
             _beneficiararyRepository = beneficiararyRepository;
+            _balanceService = balanceService;
         }
 
         public async Task<Guid> MakePaymentAsync(Guid userId, Guid beneficiaryId, float amount)
@@ -57,7 +58,7 @@ namespace Application.Payment.Topup
             }
 
             // Deduct from the balance 
-            await UpdateUserBalance(userId, userBalance - amountToPay);
+            await UpdateUserBalance(userId, amountToPay);
 
             // Save transaction
             var transactionId = Guid.NewGuid();
@@ -78,15 +79,17 @@ namespace Application.Payment.Topup
             return transactionId;
         }
 
-        private Task UpdateUserBalance(Guid userId, float amount)
+        private async Task<float> UpdateUserBalance(Guid userId, float amount)
         {
-            bal = amount;
-            return Task.FromResult(bal);
+            var updatedBal = await _balanceService.DebitAmountAsync(userId, amount);
+            
+            return updatedBal;
         }
 
-        private Task<float> GetUserBalance(Guid userId)
+        private async Task<float> GetUserBalance(Guid userId)
         {
-            return Task.FromResult(bal);
+            var balance = await _balanceService.GetBalanceAsync(userId);
+            return balance;
         }
 
         private async Task ValidateBeneficiary(Guid beneficiaryId)

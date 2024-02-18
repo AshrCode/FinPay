@@ -1,4 +1,5 @@
 using Application;
+using Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddSwaggerGen();
 
 // Adding dependencies
 builder.Services.AddApplicationDependencies();
+builder.Services.AddInfrastructureDependencies(builder.Configuration);
 
 var app = builder.Build();
 
