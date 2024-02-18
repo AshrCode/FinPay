@@ -1,6 +1,8 @@
 ﻿using Application.Payment.Topup;
 using Common.ApiException;
 using Microsoft.AspNetCore.Mvc;
+using Service.Responses;
+using System.Net;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -19,7 +21,7 @@ namespace Service.Controllers.Payment
         }
 
         /// <summary>
-        /// Tops up the specified amount to the beneficiary.
+        /// Tops up the specified amount to the specified beneficiary.
         /// </summary>
         // POST api/<PaymentController>/Topup
         [HttpPost("Topup")]
@@ -30,10 +32,15 @@ namespace Service.Controllers.Payment
         {
             try
             {
-                await _topupApp.MakePayment(request.UserID, request.BeneficiaryId, request.Amount);
+                var result = await _topupApp.MakePaymentAsync(request.UserID, request.BeneficiaryId, request.Amount);
 
-                // We can also create a generic response model for all the end-points.
-                return Ok();
+                ApiResponse response = new()
+                {
+                    ErrorCode = HttpStatusCode.OK,
+                    Data = result
+                };
+
+                return Ok(response);
             }
             catch (ApiException aexp)
             {

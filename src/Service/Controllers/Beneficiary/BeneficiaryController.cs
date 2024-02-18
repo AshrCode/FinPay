@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Application.Beneficiary;
+using Common.ApiException;
+using Microsoft.AspNetCore.Mvc;
+using Service.Responses;
+using System.Net;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -6,38 +10,78 @@ namespace Service.Controllers.Beneficiary
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BeneficiaryController : ControllerBase
+    public class BeneficiaryController : BaseController
     {
-        // GET: api/<BeneficiaryController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly IBeneficiaryApp _beneficiaryApp;
+
+        public BeneficiaryController(ILogger<BeneficiaryController> logger, IBeneficiaryApp beneficiaryApp)
+            : base(logger)
         {
-            return new string[] { "value1", "value2" };
+            _beneficiaryApp = beneficiaryApp;
         }
 
-        // GET api/<BeneficiaryController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        /// <summary>
+        /// Adds a new beneficiary for the specified user.
+        /// </summary>
+        // POST api/<BeneficiaryController>/Add
+        [HttpPost("Add")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Add(AddRequest request)
         {
-            return "value";
+            try
+            {
+                var result = await _beneficiaryApp.CreateAsync(request.NickName,request.UserId, request.IsActive);
+
+                ApiResponse response = new()
+                {
+                    ErrorCode = HttpStatusCode.OK,
+                    Data = result
+                };
+
+                return Ok(response);
+            }
+            catch (ApiException aexp)
+            {
+                return HandleApiException(aexp);
+            }
+            catch (Exception ex)
+            {
+                return HandleApiException(ex);
+            }
         }
 
-        // POST api/<BeneficiaryController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        /// <summary>
+        /// Gets all the beneficiaries for the specified user.
+        /// </summary>
+        // Get api/<BeneficiaryController>/GetAllActive/B136CF3D-766B-45AE-AA84-AC7F10C5A090
+        [HttpGet("GetAllActive/{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetAllActive(Guid userId)
         {
+            try
+            {
+                var result = await _beneficiaryApp.GetAllAsync(userId, true);
+
+                ApiResponse response = new()
+                {
+                    ErrorCode = HttpStatusCode.OK,
+                    Data = result
+                };
+
+                return Ok(response);
+            }
+            catch (ApiException aexp)
+            {
+                return HandleApiException(aexp);
+            }
+            catch (Exception ex)
+            {
+                return HandleApiException(ex);
+            }
         }
 
-        // PUT api/<BeneficiaryController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<BeneficiaryController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }

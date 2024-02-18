@@ -2,6 +2,6 @@
 {
     public interface ITopupApp
     {
-        Task MakePayment(int userId, int beneficiaryId, int amount);
+        Task<Guid> MakePaymentAsync(Guid userId, Guid beneficiaryId, float amount);
     }
 }

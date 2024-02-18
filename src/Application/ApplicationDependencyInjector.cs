@@ -1,5 +1,7 @@
-﻿using Application.Payment.Topup;
+﻿using Application.Beneficiary;
+using Application.Payment.Topup;
 using Microsoft.Extensions.DependencyInjection;
+using Persistence;
 
 namespace Application
 {
@@ -8,8 +10,9 @@ namespace Application
         public static IServiceCollection AddApplicationDependencies(this IServiceCollection services)
         {
             services.AddScoped<ITopupApp, TopupApp>();
+            services.AddScoped<IBeneficiaryApp, BeneficiaryApp>();
 
-            //services.AddPersistenceDependencies();
+            services.AddPersistenceDependencies();
 
             return services;
         }

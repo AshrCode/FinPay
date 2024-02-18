@@ -1,16 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Configuration;
 
 namespace Service.Controllers.Payment
 {
     public class TopupRequest
     {
         [Required]
-        public int UserID { get; set; }
+        public Guid UserID { get; set; }
 
         [Required]
-        public int BeneficiaryId { get; set; }
+        public Guid BeneficiaryId { get; set; }
 
         [Required]
-        public int Amount { get; set; }
+        [Range(5, 1000, ErrorMessage = "The minimum amount should be 5 AED")]
+        public float Amount { get; set; }
     }
 }
