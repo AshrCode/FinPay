@@ -48,6 +48,9 @@ namespace Infrastructure.FinPayBalanceService
             {
                 var errMessage = $"Failed to get account imfofmetion. User Id: {userId}, StatusCode: {response.StatusCode}.";
                 _logger.LogError(errMessage);
+
+                _logger.LogError($"FinPayBalanceService -- Error: {response.Content}");
+
                 throw new ApiException(ApiErrorCodes.InternalError, errMessage);
             }
 

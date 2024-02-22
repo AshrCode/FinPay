@@ -10,7 +10,7 @@ namespace Application.Beneficiary
         private readonly IBeneficiararyRepository _beneficiararyRepository;
         private readonly IUserRepository _userRepository;
 
-        private readonly ILogger _logger;
+        private readonly ILogger<BeneficiaryApp> _logger;
 
         public BeneficiaryApp(ILogger<BeneficiaryApp> logger, IBeneficiararyRepository beneficiararyRepository, IUserRepository userRepository)
         {
@@ -40,7 +40,7 @@ namespace Application.Beneficiary
                 UserId = userId,
             };
 
-            await _beneficiararyRepository.Create(beneficiaryId, beneficiary);
+            await _beneficiararyRepository.Save(beneficiary);
 
             return beneficiaryId;
         }
@@ -52,13 +52,14 @@ namespace Application.Beneficiary
 
             var activeBeneficiaries = await _beneficiararyRepository.GetAllBeneficiariesByUserId(userId);
 
+            // Return only active ones
             return activeBeneficiaries.Where(x => x.IsActive == isActive).ToList();
                                                 
         }
 
         private async Task ValidateUser(Guid userId)
         {
-            var user = await _userRepository.GetById(userId);
+            var user = await _userRepository.Get(userId);
             if (user is null)
             {
                 var errMessage = $"User with the ID {userId} does not exist.";

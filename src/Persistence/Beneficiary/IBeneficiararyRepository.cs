@@ -2,11 +2,11 @@
 {
     public interface IBeneficiararyRepository
     {
-        Task<Domain.Entities.Beneficiary> GetById(Guid id);
+        Task<Domain.Entities.Beneficiary> Get(Guid id, Guid userId);
 
         Task<List<Domain.Entities.Beneficiary>> GetAllBeneficiariesByUserId(Guid userId);
 
-        Task Create(Guid beneficiaryId, Domain.Entities.Beneficiary beneficiary);
+        Task Save(Domain.Entities.Beneficiary beneficiary);
 
     }
 }

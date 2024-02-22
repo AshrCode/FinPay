@@ -2,6 +2,6 @@
 {
     public interface IUserRepository
     {
-        Task<Domain.Entities.User> GetById(Guid id);
+        Task<Domain.Entities.User> Get(Guid id);
     }
 }

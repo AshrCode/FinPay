@@ -1,30 +1,31 @@
 ﻿using Domain.Enum;
-using Microsoft.Extensions.Logging;
+using Persistence.DatabaseSchema;
 
 namespace Persistence.Transaction
 {
-    public class TransactionRepository : RepositoryBase<Domain.Entities.Transaction>, ITransactionRepository
+    public class TransactionRepository : ITransactionRepository
     {
-        public TransactionRepository(ILogger<TransactionRepository> logger) 
-            : base(logger)
+        // Another way of using repositories is to intorduce UnitOfWork pattern.
+        protected readonly FinPayDbContext _dbContext;
+
+        public TransactionRepository(FinPayDbContext dbContext)
         {
+            _dbContext = dbContext;
         }
 
-        public async Task Add(Domain.Entities.Transaction transaction, Guid key)
+        public async Task Add(Domain.Entities.Transaction transaction)
         {
-            await Save(key, transaction);
+            await _dbContext.AddAsync(transaction);
+            await _dbContext.SaveChangesAsync();
         }
 
         public Task<List<Domain.Entities.Transaction>> GetForTheMonth(Guid userId, TransactionType transactionType)
         {
-            var data = _storage.Where(x => x.Value.UserId == userId 
-                                && x.Value.TransactionType == transactionType
-                                && x.Value.TransactionDate.Month == DateTime.Now.Month)
-                               .Select(s => s.Value).ToList();
+            var data = _dbContext.Transactions.Where(t => t.UserId == userId 
+                                                    && t.TransactionType == transactionType
+                                                    && t.TransactionDate.Month == DateTime.Now.Month).ToList();
 
             return Task.FromResult(data);
         }
-
-
     }
 }

@@ -4,7 +4,8 @@ using System.Collections.Concurrent;
 
 namespace Persistence
 {
-    public abstract class RepositoryBase<T> : IRepositoryBase<T>
+    [Obsolete]
+    public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
     {
         protected static IDictionary<Guid, T> _storage = new ConcurrentDictionary<Guid, T>();
         protected readonly ILogger<RepositoryBase<T>> _logger;

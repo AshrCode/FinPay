@@ -1,30 +1,44 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Persistence.DatabaseSchema;
 
 namespace Persistence.Beneficiary
 {
-    public class BeneficiararyRepository : RepositoryBase<Domain.Entities.Beneficiary>, IBeneficiararyRepository
+    public class BeneficiararyRepository : IBeneficiararyRepository
     {
-        public BeneficiararyRepository(ILogger<BeneficiararyRepository> logger) 
-            : base(logger)
+        // Another way of using repositories is to intorduce UnitOfWork pattern.
+        protected readonly FinPayDbContext _dbContext;
+
+        public BeneficiararyRepository(FinPayDbContext dbContext)
         {
+            _dbContext = dbContext;
         }
 
-        public async Task Create(Guid beneficiaryId, Domain.Entities.Beneficiary beneficiary)
+        public async Task Save(Domain.Entities.Beneficiary beneficiary)
         {
-            await Save(beneficiaryId, beneficiary);
+            var benef = await Get(beneficiary.Id, beneficiary.UserId);
+            if (benef is null)
+            {
+                await _dbContext.AddAsync(beneficiary);
+            }
+            else
+            {
+                benef.IsActive = beneficiary.IsActive;
+                benef.NickName = beneficiary.NickName; // As per common banking functionality a user can have multiple beneficiaries with a common nickname but with different bank account numbers.
+            }
+
+            await _dbContext.SaveChangesAsync();
         }
 
         public Task<List<Domain.Entities.Beneficiary>> GetAllBeneficiariesByUserId(Guid userId)
         {
-            var beneficiaries = _storage.Where(s => s.Value.UserId == userId)
-                                        .Select(s => s.Value).ToList(); 
-            
+            var beneficiaries = _dbContext.Beneficiaries.Where(s => s.UserId == userId)?.ToList();
+
             return Task.FromResult(beneficiaries);
         }
 
-        public async Task<Domain.Entities.Beneficiary> GetById(Guid id)
+        public async Task<Domain.Entities.Beneficiary> Get(Guid id, Guid userId)
         {
-            return await Get(id);
+            return await _dbContext.Beneficiaries.FirstOrDefaultAsync(x =>x.Id == id && x.UserId == userId);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Application.Payment.Topup
         private readonly ITransactionRepository _transactionRepository;
         private readonly IBeneficiararyRepository _beneficiararyRepository;
         private readonly IBalanceService _balanceService;
-        private readonly ILogger _logger;
+        private readonly ILogger<TopupApp> _logger;
 
         public TopupApp(ILogger<TopupApp> logger, IUserRepository userRepository, ITransactionRepository transactionRepository, IBeneficiararyRepository beneficiararyRepository, IBalanceService balanceService)
         {
@@ -32,7 +32,7 @@ namespace Application.Payment.Topup
             var user = await ValidateUser(userId);
 
             // Validate beneficiary
-            await ValidateBeneficiary(beneficiaryId);
+            await ValidateBeneficiary(beneficiaryId, userId);
 
             // Get remaining top-up quota for the user
             var availableTopupQuota = await GetAvailableTopupQuota(user, beneficiaryId);
@@ -61,28 +61,26 @@ namespace Application.Payment.Topup
             await UpdateUserBalance(userId, amountToPay);
 
             // Save transaction
-            var transactionId = Guid.NewGuid();
-
-            Transaction trans = new()
+            Transaction transaction = new()
             {
                 Amount = amount,
                 Fee = tranactionFee,
                 BeneficiaryId = beneficiaryId,
-                Id = transactionId,
+                Id = Guid.NewGuid(),
                 TransactionDate = DateTime.UtcNow,
                 TransactionType = TransactionType.TopUp,
                 UserId = userId
             };
 
-            await _transactionRepository.Add(trans, transactionId);
+            await _transactionRepository.Add(transaction);
 
-            return transactionId;
+            return transaction.Id;
         }
 
         private async Task<float> UpdateUserBalance(Guid userId, float amount)
         {
             var updatedBal = await _balanceService.DebitAmountAsync(userId, amount);
-            
+
             return updatedBal;
         }
 
@@ -92,9 +90,9 @@ namespace Application.Payment.Topup
             return balance;
         }
 
-        private async Task ValidateBeneficiary(Guid beneficiaryId)
+        private async Task ValidateBeneficiary(Guid beneficiaryId, Guid userId)
         {
-            var beneficiary = await _beneficiararyRepository.GetById(beneficiaryId);
+            var beneficiary = await _beneficiararyRepository.Get(beneficiaryId, userId);
             if (beneficiary is null)
             {
                 var errMessage = $"Beneficiary with the ID {beneficiaryId} does not exist.";
@@ -113,7 +111,7 @@ namespace Application.Payment.Topup
 
         private async Task<User> ValidateUser(Guid userId)
         {
-            var user = await _userRepository.GetById(userId);
+            var user = await _userRepository.Get(userId);
             if (user is null)
             {
                 var errMessage = $"User with the ID {userId} does not exist.";

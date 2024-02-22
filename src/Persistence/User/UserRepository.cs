@@ -1,29 +1,21 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Persistence.DatabaseSchema;
 
 namespace Persistence.User
 {
-    public class UserRepository : RepositoryBase<Domain.Entities.User>, IUserRepository
+    public class UserRepository : IUserRepository
     {
-        public UserRepository(ILogger<UserRepository> logger) 
-            : base(logger)
-        {
-            if (_storage.Count < 1)
-            {
-                // Seeding sample user data.
-                List<KeyValuePair<Guid, Domain.Entities.User>> items = GetSampleUserData();
-                items.ForEach(x => _storage.Add(x.Key, x.Value));
+        // Another way of using repositories is to intorduce UnitOfWork pattern.
+        protected readonly FinPayDbContext _dbContext;
 
-                _logger.LogInformation("Sample decision tree data has been seeded.");
-            }
+        public UserRepository(FinPayDbContext dbContext)
+        {
+            _dbContext = dbContext;
         }
 
-        public async Task<Domain.Entities.User> GetById(Guid id)
+        public async Task<Domain.Entities.User> Get(Guid id)
         {
-            /*
-             * Here, we can add additional repository level functionality in future if needed.
-             */
-
-            return await Get(id);
+            return await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == id);
         }
 
         private List<KeyValuePair<Guid, Domain.Entities.User>> GetSampleUserData()
